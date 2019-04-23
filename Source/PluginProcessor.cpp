@@ -24,17 +24,42 @@ PluginAudioProcessor::PluginAudioProcessor()
                        )
 #endif
 {
-	
+    mainSynth.clearVoices();
+    
+    for (auto i = 0; i < 5; ++i)
+    {
+        mainSynth.addVoice(new SynthVoice());
+    }
+    
+    mainSynth.clearSounds();
+    mainSynth.addSound(new SynthSound());
 }
 
 PluginAudioProcessor::~PluginAudioProcessor()
 {
+    
 }
 
 //==============================================================================
 const String PluginAudioProcessor::getName() const
 {
     return JucePlugin_Name;
+}
+
+void PluginAudioProcessor::updateVoice(int oscNumber)
+{
+    Oscillator oscToSend;
+    
+    if (oscNumber == 1)
+        oscToSend = oscOne;
+    else
+        oscToSend = oscTwo;
+    
+    for (auto i = 0; i < 5; ++i)
+    {
+        mainVoice = dynamic_cast<SynthVoice*>(mainSynth.getVoice(i));
+        mainVoice->updateSound(oscToSend, oscNumber);
+    }
 }
 
 bool PluginAudioProcessor::acceptsMidi() const
@@ -96,9 +121,8 @@ void PluginAudioProcessor::changeProgramName (int index, const String& newName)
 //==============================================================================
 void PluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
-	
+    mainSynth.setCurrentPlaybackSampleRate(sampleRate);
+    
 }
 
 void PluginAudioProcessor::releaseResources()
@@ -134,24 +158,8 @@ bool PluginAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 void PluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
     ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
-
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
     
-
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-	
+    mainSynth.renderNextBlock (buffer, midiMessages, 0, buffer.getNumSamples());
 }
 
 //==============================================================================

@@ -11,6 +11,8 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
+#include "SynthSound.h"
+#include "SynthVoice.h"
 
 //==============================================================================
 /**
@@ -31,6 +33,8 @@ public:
    #endif
 
     void processBlock (AudioBuffer<float>&, MidiBuffer&) override;
+    
+    void updateVoice(int oscNumber);
 
     //==============================================================================
     AudioProcessorEditor* createEditor() override;
@@ -54,9 +58,14 @@ public:
     //==============================================================================
     void getStateInformation (MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
+    
+    MidiKeyboardState keyState;
+    Oscillator oscOne, oscTwo;
 
 private:
-	
+    
+    Synthesiser mainSynth;
+    SynthVoice* mainVoice;
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginAudioProcessor)
 };
